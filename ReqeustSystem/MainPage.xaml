@@ -13,7 +13,7 @@
     </Page.DataContext>
 
     <Grid>
-        <Button Command="{x:Bind Mode=OneWay, Path=ViewModel._BuildingList}" Content="Room List" Margin="91,225,0,0" VerticalAlignment="Top" Click="Button_Click_1" Height="35"/>
+        <Button Command="{x:Bind Mode=OneWay, Path=ViewModel._BuildingList}" Content="Room List" Margin="91,225,0,0" VerticalAlignment="Top" Height="35"/>
         <TextBox HorizontalAlignment="Left" Margin="469,143,0,0" Text="{x:Bind Path=ViewModel.RequestDescription, Mode=TwoWay}" TextWrapping="Wrap" VerticalAlignment="Top" Height="117" Width="154" TextChanged="TextBox_TextChanged"/>
         <TextBlock HorizontalAlignment="Left" Margin="511,100,0,0" Text="Description" TextWrapping="Wrap" VerticalAlignment="Top" Height="20"/>
         <TextBlock HorizontalAlignment="Left" Margin="294,100,0,0" Text="Room" TextWrapping="Wrap" VerticalAlignment="Top" Height="20" RenderTransformOrigin="-2.948,-5.666"/>
@@ -30,7 +30,7 @@
             SelectedItem="{x:Bind ViewModel.SelectedBuilding, Mode=TwoWay}"
             DisplayMemberPath="buildingId" Height="34"/>
         <TextBlock HorizontalAlignment="Left" Margin="108,100,0,0" Text="Building" TextWrapping="Wrap" VerticalAlignment="Top" Height="20"/>
-        <Button Content="Submit Request" Margin="487,281,0,0" VerticalAlignment="Top" Click="Button_Click" Height="35"/>
+        <Button Command="{x:Bind ViewModel._RequestSubmit, Mode=OneTime}" Content="Submit Request" Margin="487,281,0,0" VerticalAlignment="Top" Click="Button_Click" Height="35"/>
         <TextBlock x:Name="NotificationLabel" HorizontalAlignment="Left" Margin="750,272,0,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
         <ListView SelectedItem ="{x:Bind ViewModel.SelectedRequest, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.OC_request}" HorizontalAlignment="Left" Height="375" Margin="750,202,0,0" VerticalAlignment="Top" Width="291">
             <ListView.ItemTemplate>

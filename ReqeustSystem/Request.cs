@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Foundation;
+using RequestSystem;
 
 namespace ReqeustSystem
 {
@@ -53,7 +54,7 @@ namespace ReqeustSystem
             _requestRoom = RequestRoom;
             //Making a unique key for request
             _requestcount++;
-            _requestId = _requestId;
+            _requestId = _requestcount;
         }
         public event PropertyChangedEventHandler PropertyChanged;
         public void OnPropertyChanged([CallerMemberName] string propertyName = null)

@@ -116,6 +116,7 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Persistancysave.cs" />
     <Compile Include="RequestViewModel.cs" />
     <Compile Include="Admin.cs" />
     <Compile Include="App.xaml.cs">
@@ -158,8 +159,14 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="bootstrap">
+      <Version>4.5.3</Version>
+    </PackageReference>
     <PackageReference Include="EntityFramework">
       <Version>6.4.4</Version>
+    </PackageReference>
+    <PackageReference Include="jQuery">
+      <Version>3.5.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNet.Mvc">
       <Version>5.2.7</Version>

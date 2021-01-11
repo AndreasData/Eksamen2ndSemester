@@ -6,12 +6,19 @@ using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using Windows.Storage;
+using RequestSystem;
+using Newtonsoft.Json;
 
 namespace ReqeustSystem
 {
     public class RequestViewModel : INotifyPropertyChanged
     {
+   
+        
+
         #region INotifyPropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;
         public void OnPropertyChanged([CallerMemberName] string propertyName = null)
@@ -21,31 +28,14 @@ namespace ReqeustSystem
         #endregion
         #region Proparties
         // Proparties used to create a database
-        public Room RequestRoom { get; set; }
         public string RequestDescription { get; set; }
-        // Praparties used to show the list
-        public int RequestID { get; set; }
-        public string MyProperty { get; set; }
-
-        #endregion
-        private Building selectedBuilding;
         private Request selectedRequest;
-        private Room selectedRoom;
-        private Building specificBuilding;
-        private Room specificRoom;
 
-        public Building SpecificBuilding { get => specificBuilding; set => specificBuilding = value; }
-        public Room SpecificRoom { get => specificRoom; set => specificRoom = value; }
-        // OC for request
-        public ObservableCollection<Request> OC_request { get; set; }
-
-        #region Creating OC for Rooms
-        // Room OC for a drop down view
-        private ObservableCollection<Room> OC_room;
-        public ObservableCollection<Room> OC_rooms
+        private Building _sbuilding;
+        public Building sBuilding
         {
-            get { return OC_room; }
-            set { OC_room = value; }
+            get { return _sbuilding; }
+            set { _sbuilding = value; }
         }
 
         private Room _sRoom;
@@ -55,8 +45,8 @@ namespace ReqeustSystem
             set { _sRoom = value; }
         }
         #endregion
-
-        #region Creating OC for Buildings
+        #region ObservableCollection
+        public ObservableCollection<Request> OC_request { get; set; }
         private ObservableCollection<Building> OC_building;
         public ObservableCollection<Building> OC_buildings
         {
@@ -64,13 +54,15 @@ namespace ReqeustSystem
             set { OC_building = value; }
         }
 
-        private int _buildingID;
-        public int _sbuildingID
+        private ObservableCollection<Room> OC_room;
+        public ObservableCollection<Room> OC_rooms
         {
-            get { return _buildingID; }
-            set { _buildingID = value; }
+            get { return OC_room; }
+            set { OC_room = value; }
         }
         #endregion
+
+        const string serverUrl = "http://localhost:51474/";
 
         #region RelayCommands
         /*
@@ -84,6 +76,7 @@ namespace ReqeustSystem
         {
             OC_request = new ObservableCollection<Request>();   
             OC_buildings = new ObservableCollection<Building>();
+            OC_rooms = new ObservableCollection<Room>();
             #region OC for buildings
             Building Building1 = new Building("Haldor Topsøe");
             Building Building2 = new Building("Kiwi");
@@ -124,48 +117,18 @@ namespace ReqeustSystem
 
 
             #endregion
-            OC_rooms = new ObservableCollection<Room>();
-            #region OC for Room
-            Room room1 = new Room(111, "Office");
-            Room room2 = new Room(112, "Office");
-            Room room3 = new Room(113, "Workshop");
-            Room room4 = new Room(114, "Cafeteria");
-
-            OC_rooms.Add(room1);
-            OC_rooms.Add(room2);
-            OC_rooms.Add(room3);
-            OC_rooms.Add(room4);
-
-            Request request1 = new Request(room1, "table");
-            Request request2 = new Request(room4, "Light bulb out");
-            OC_request.Add(request1);
-            OC_request.Add(request2);
-            #endregion
-
             _RequestSubmit = new RelayCommands(RequestSubmit);
             _BuildingList = new RelayCommands(SelectedBuildingList);
-
-            SelectedRequest = new Request();
-            SelectedBuilding = new Building();
-            SelectedRoom = new Room();
         }
         public void RequestSubmit()
         {
-            Request oRequest = new Request(RequestRoom, RequestDescription);
+            Request oRequest = new Request(sRoom, RequestDescription);
 
             OC_request.Add(oRequest);
         }
 
 
         //Work inProgress function to change room list after you choose building
-        public Building SelectedBuilding 
-        {
-            get => selectedBuilding; 
-            set
-            {
-                selectedBuilding = value;
-            }
-        }
         public Request SelectedRequest 
         {
             get => selectedRequest;
@@ -174,22 +137,100 @@ namespace ReqeustSystem
                 selectedRequest = value;
             }
         }
-        public Room SelectedRoom 
-        {
-            get => selectedRoom;
-            set 
-            {
-                selectedRoom = value;
-            }
-        }
         //Changing OC_room 
         public void SelectedBuildingList() 
         {
             OC_rooms.Clear();
-            foreach(Room room in SelectedBuilding.List_Room) 
+            foreach(Room room in sBuilding.List_Room) 
             {
                 OC_rooms.Add(room);
             }
         }
+        #region Hent Data
+        private async void HentDataFraDiskAsync()
+        {
+            OC_request.Clear();
+            List<Request> nyListe = new List<Request>();
+            nyListe = await PersistencyService.HentDataFraDiskAsyncPS();
+
+            //Setup client handler
+            HttpClientHandler handler = new HttpClientHandler
+            {
+                UseDefaultCredentials = true
+            };
+
+            using (var client = new HttpClient(handler))
+            {
+                //Initialize client
+                client.BaseAddress = new Uri(serverUrl);
+                client.DefaultRequestHeaders.Clear();
+
+                //Request JSON format
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                try
+                {
+                    //Get all the Requests from the database
+                    var oRequest = client.GetAsync("api/Requests").Result;
+
+                    //Check response -> throw exception if NOT successful
+                    oRequest.EnsureSuccessStatusCode();
+
+                    //Get the Request as a ICollection
+                    var Requests = oRequest.Content.ReadAsAsync<ICollection<Request>>().Result;
+
+                    foreach (var ViewRequest in Requests)
+                    {
+
+                        this.OC_request.Add(new Request(ViewRequest.Room,ViewRequest.Description));
+                    }
+
+                    
+                }
+                catch
+                {
+
+                }
+            }
+            //StorageFile file = await localfolder.GetFileAsync(filnavn);
+            //string jsonText = await FileIO.ReadTextAsync(file);
+            //this.OC_blomster.Clear();
+            //IndsætJson(jsonText);
+        }
+        #endregion
+
+        #region Gem data
+        private async void GemDataTilDiskAsync()
+        {
+            this.jsonRequest = GetJson();
+
+            StorageFile file = await localfolder.CreateFileAsync(filnavn, CreationCollisionOption.ReplaceExisting);
+
+            await FileIO.WriteTextAsync(file, this.jsonRequest);
+        }
+
+        private string GetJson()
+        {
+            string json = JsonConvert.SerializeObject(OC_request);
+            return json;
+        }
+        
+        #endregion
+        private string jsonRequest;
+
+        public string JsonRequest
+        {
+            get { return jsonRequest; }
+            set { jsonRequest = value; }
+        }
+
+        private readonly StorageFolder localfolder = null;
+
+        private readonly string filnavn = "Request1.json";
+
+       
+
     }
+
+
 }
